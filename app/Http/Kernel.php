@@ -60,12 +60,13 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'email_verified'=>\App\Http\Middleware\MustBeEmailVerified::class,
     ];
 
     /**
      * The priority-sorted list of middleware.
      *
-     * This forces non-global middleware to always be in the given order.
+     * This forces the listed middleware to always be in the given order.
      *
      * @var array
      */
