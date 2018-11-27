@@ -3,7 +3,9 @@
 namespace App;
 
 use App\Jobs\RegistrationEmailJob;
+use App\Mail\RegistrationConfirmationEmail;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
 
 class LoginToken extends Model
 {
@@ -36,8 +38,8 @@ class LoginToken extends Model
      */
     public function sendRegistrationEmail()
     {
-        $registrationEmail = new RegistrationEmailJob($this->user);
-        $registrationEmail->dispatch($this->user);
+        $url = url('register/token',$this->user->loginToken->token);
+        Mail::to($this->user)->queue(new RegistrationConfirmationEmail($url));
     }
 
 

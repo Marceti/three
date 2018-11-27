@@ -32,7 +32,6 @@ Route::get("/login", '\App\Http\Controllers\Authentication\SessionsController@cr
 Route::post("/login", '\App\Http\Controllers\Authentication\SessionsController@store');
 Route::get("/logout", '\App\Http\Controllers\Authentication\SessionsController@destroy')->name('logout');
 
-
 //Reset password
 Route::get("/login/resetPassword", '\App\Http\Controllers\Authentication\SessionsController@resetPasswordForm')->name('reset_password');
 Route::post("/login/resetPassword", '\App\Http\Controllers\Authentication\SessionsController@resetPassword');
