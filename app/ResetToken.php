@@ -3,8 +3,10 @@
 namespace App;
 
 use App\Jobs\ResetPasswordEmailJob;
+use App\Mail\ResetPasswordEmail;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
 
 class ResetToken extends Model {
 
@@ -37,8 +39,8 @@ class ResetToken extends Model {
      */
     public function sendResetEmail()
     {
-        $resetEmail = new ResetPasswordEmailJob($this->user);
-        $resetEmail->dispatch($this->user);
+        $url = url('resetPassword/token',$this->user->resetToken->token);
+        Mail::to($this->user)->queue(new ResetPasswordEmail($url));
     }
 
     /**

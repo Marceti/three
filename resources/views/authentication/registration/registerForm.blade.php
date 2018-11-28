@@ -18,12 +18,12 @@
 
                 <div class="form-group">
                     <label for="name">Name:</label>
-                    <input type="text" class="form-control" name="name" placeholder="Your Name Here" required>
+                    <input type="text" class="form-control" name="name" placeholder="Your Name Here" required value={{old('name')}}>
                 </div>
 
                 <div class="form-group">
                     <label for="email">Email:</label>
-                    <input type="email" class="form-control" name="email" placeholder="Your Email Here" required>
+                    <input type="email" class="form-control" name="email" placeholder="Your Email Here" required value={{old('email')}}>
                 </div>
 
 

@@ -6,6 +6,7 @@ use App\ClassContainer\Authentication\AuthenticatesUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegistrationRequest;
 use App\LoginToken;
+use App\Rules\MustHaveUppLowNum;
 use Illuminate\Http\Request;
 
 class RegistrationController extends Controller {
@@ -15,7 +16,7 @@ class RegistrationController extends Controller {
      */
     public function __construct()
     {
-        $this->middleware('guest', ['except' => 'destroy']);
+        $this->middleware('guest');
     }
 
     /**
@@ -29,13 +30,17 @@ class RegistrationController extends Controller {
     /**
      * Stores User, and sends Token - link Email
      * @param AuthenticatesUser $auth
-     * @param RegistrationRequest $request
      * @return \Illuminate\Http\RedirectResponse
      * @throws \Exception
      */
-    public function store(AuthenticatesUser $auth, RegistrationRequest $request)
+    public function store(AuthenticatesUser $auth)
     {
-        return $auth->invite();
+        $credentials = request()->validate([
+            'name' => 'required|alpha_num|min:3|unique:users,name',
+            'email'=> 'required|email|unique:users,email',
+            'password'=>['required','confirmed','min:6',new MustHaveUppLowNum],
+        ]);
+        return $auth->invite($credentials);
     }
 
     /**
@@ -60,18 +65,15 @@ class RegistrationController extends Controller {
     /**
      * Resends the token to the user with the given email
      * @param AuthenticatesUser $auth
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      * @throws \Exception
-     * @throws \Illuminate\Validation\ValidationException
      */
-    public function resendToken(AuthenticatesUser $auth, Request $request)
+    public function resendToken(AuthenticatesUser $auth)
     {
-        $this->validate($request,[
-            'email'=> 'required|email',
+        $existingEmail=request()->validate([
+            'email'=> 'required|email|exists:users,email',
         ]);
-
-        return $auth->invite(true);
+        return $auth->invite($existingEmail);
     }
 
 

@@ -22,14 +22,14 @@ class AuthenticatesUser {
 
 
     /**
-     * Invites the user by : creating user or grabing user, creating token for this user, sending invite email with token link
-     * @param bool $existing
+     * Invites the user by : creating user or grabbing user, creating token for this user, sending invite email with token link
+     * @param $credentials
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function invite($existing = false)
+    public function invite($credentials)
     {
-        $user = (! $existing ? $this->createUser() : User::byEmail(request('email')));
+        $user = $this->resolveUser($credentials);
 
         if ($user)
         {
@@ -46,7 +46,7 @@ class AuthenticatesUser {
     /**
      * Authenticates user with the given Login token
      * @param LoginToken $token
-     * @return RedirectResponse|\Illuminate\Routing\Redirector
+     * @return RedirectResponse|\Illuminate\Routing\Redirect
      */
     public function authenticate(LoginToken $token)
     {
@@ -65,10 +65,10 @@ class AuthenticatesUser {
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function login()
+    public function login($credentials)
     {
-        $this->rememberUser();
-            return $this->loginAttempt();
+        $this->rememberUser($credentials);
+        return $this->loginAttempt($credentials);
     }
 
     /**
@@ -87,9 +87,9 @@ class AuthenticatesUser {
      * @return $this|RedirectResponse
      * @throws \Exception
      */
-    public function resetPassword()
+    public function resetPassword($email)
     {
-        $user = User::byEmail(request('email'));
+        $user = User::byEmail($email);
 
         $this->createResetToken($user)
             ->sendResetEmail();
@@ -104,43 +104,60 @@ class AuthenticatesUser {
      */
     public function createNewPasswordForm(ResetToken $token)
     {
-
         $user = $token->user;
 
-        return view("authentication.login.changePasswordForm", compact('user'));
+        abort_if(! $user,401,"This user is not authorized");
 
+        return view("authentication.login.changePasswordForm", compact('user'));
     }
 
 
     /**
      * Attempts to change password for the user with email address
-     * @param $request
+     * @param $credentials
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function changePassword($request)
+    public function changePassword($credentials)
     {
+        $user = User::byEmail($credentials['email']);
 
-        $user = User::byEmail(request('email'));
+        $user->changePassword($credentials);
 
-        $user->changePassword($request);
-
-        $this->rememberUser();
+        $this->rememberUser($credentials);
 
         return redirect()->route('login')->with('message', Lang::get('authentication.password_reset_successful'));
 
     }
 
     /**
-     * Saves the credentials if remember-me is on , and creates uconfirmed user
+     * If user with email exists returns it, otherwise creates a user
+     * @param $credentials
+     * @return mixed
+     * @throws \Exception
+     */
+    private function resolveUser($credentials)
+    {
+        $user= User::byEmail($credentials['email']);
+
+        if($user){
+            return $user;
+        }
+        else {
+            return $this->createUser($credentials);
+        }
+    }
+
+
+    /**
+     * Saves the credentials if remember-me is on , and creates unconfirmed user
+     * @param $credentials
      * @return mixed
      */
-    private function createUser()
+    private function createUser($credentials)
     {
-        $this->rememberUser();
-        $credentials=request()->only(['name', 'email', 'password']);
-        $credentials['remember_token']=str_random(50);
-        return User::create($credentials);
+        $this->rememberUser($credentials);
+        return User::create($credentials+['remember_token'=>str_random(50)]);
     }
 
     /**
@@ -163,23 +180,25 @@ class AuthenticatesUser {
 
     /**
      * If checkbox , remembers the user in current session
+     * @param $credentials
      */
-    private function rememberUser()
+    private function rememberUser($credentials)
     {
-        if (request()->has('remember-me'))
+        if (array_key_exists('remember-me',$credentials))
         {
-            SessionManager::rememberUser(request()->only(['email', 'password']));
+            SessionManager::rememberUser($credentials);
         }
     }
 
 
     /**
      * Attempts to login the user if the extra-conditions pass and also user-password matches
+     * @param $credentials
      * @return RedirectResponse
      */
-    private function loginAttempt()
+    private function loginAttempt($credentials)
     {
-        if (Auth::attempt(request()->only(['email', 'password'])))
+        if (Auth::attempt($credentials))
         {
             return redirect()->intended(request('home'));
         }

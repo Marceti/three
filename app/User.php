@@ -87,15 +87,17 @@ class User extends Authenticatable
         return static::where('email',$email)->first();
     }
 
-    public function changePassword($request)
+    public function changePassword($credentials)
     {
-        if($this->remember_token=$request->input('remember_token') && $this->resetToken->token=$request->input('reset_token')){
-            $this->password=$request->input('password');
-            $this->remember_token=str_random(50);
-            $this->save();
+        if($this->remember_token==$credentials['remember_token'] && $this->resetToken->token==$credentials['reset_token']){
             $this->resetToken->delete();
-            return $this;
+
+           return $this->update(['password'=>$credentials['password'],
+                           'remember_token'=>str_random(50)]);
         }
-        throw new Exception('Division by zero.');
+
+        return abort(401,"Unauthorized password change");
     }
+
+
 }

@@ -19,8 +19,7 @@
 
                 <div class="form-group">
                     <label for="email">Email:</label>
-                    <input type="email" class="form-control" name="email" placeholder="Your Email Here" required
-                           value={{$user->email}}>
+                    <input type="email" class="form-control" name="email" placeholder="Your Email Here" required>
                 </div>
 
                 <div class="form-group">
