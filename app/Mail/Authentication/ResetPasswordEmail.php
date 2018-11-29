@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Mail;
+namespace App\Mail\Authentication;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -30,6 +30,6 @@ class ResetPasswordEmail extends Mailable
      */
     public function build()
     {
-        return $this->view('emails.resetPassword')->with('url',$this->url);
+        return $this->view('emails.authentication.resetPassword')->with('url',$this->url);
     }
 }

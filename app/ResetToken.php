@@ -2,44 +2,26 @@
 
 namespace App;
 
-use App\Jobs\ResetPasswordEmailJob;
-use App\Mail\ResetPasswordEmail;
-use Exception;
+use App\Mail\Authentication\ResetPasswordEmail;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
 
 class ResetToken extends Model {
 
-    protected $fillable = ['user_id', 'token','count'];
+    protected $fillable = ['user_id', 'token','user_token'];
 
     public function getRouteKeyName()
     {
         return 'token';
     }
 
-    /**
-     * Creates a new token for the given user if it does not exist, otherwise it will return the existing one
-     * @param User $user
-     * @return mixed
-     */
-    public static function generateFor(User $user)
-    {
-        $count=0;
-        if ($token = $user->resetToken)
-        {
-            $count=$token->count;
-            $token->delete();
-        }
-            return static::createToken($user,$count);
-    }
-
-
-    /**
+       /**
      *Triggers a Job with the purpose of sending an email
      */
     public function sendResetEmail()
     {
-        $url = url('resetPassword/token',$this->user->resetToken->token);
+        $url = url('resetPassword/token',$this);
         Mail::to($this->user)->queue(new ResetPasswordEmail($url));
     }
 
@@ -53,15 +35,15 @@ class ResetToken extends Model {
 
     /**
      * @param $user
-     * @param $count
      * @return mixed
      */
-    public static function createToken($user, $count)
+    public static function createToken($user)
     {
         return static::create([
             'user_id' => $user->id,
-            'token'   => str_random(50),
-            'count' => $count+1,
+            'token'   => Carbon::now()->format('Y-m-d').str_random(50),
+            'user_token' => $user->remember_token,
+
         ]);
     }
 
@@ -74,4 +56,9 @@ class ResetToken extends Model {
         return static::where('token',$token)->firstorfail();
     }
 
+
+    public function active()
+    {
+        return ($this->user->remember_token==$this->user_token);
+    }
 }

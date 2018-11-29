@@ -2,10 +2,12 @@
 
 namespace App;
 
+use App\Mail\Authentication\resetPasswordConfirmationEmail;
 use Carbon\Carbon;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Mail;
 use Mockery\Exception;
 
 class User extends Authenticatable
@@ -46,11 +48,11 @@ class User extends Authenticatable
 
     /**
      * One to One realtionship
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function resetToken()
+    public function resetTokens()
     {
-        return $this->hasOne('App\ResetToken');
+        return $this->hasMany('App\ResetToken');
     }
 
     /**
@@ -87,6 +89,9 @@ class User extends Authenticatable
         return static::where('email',$email)->first();
     }
 
+    /**
+     * @return mixed
+     */
     private function refreshRememberToken()
     {
         return tap($this,function(){
@@ -101,8 +106,19 @@ class User extends Authenticatable
      */
     public function changePassword($password)
     {
-        $this->resetToken->delete();
-        return $this->refreshRememberToken()->update(['password'=>$password]);
+        return tap($this)->update(['password'=>$password])
+            ->refreshRememberToken()
+            ->sendResetConfirmationEmail($password);
+
+    }
+
+    /**
+     *Triggers a Job with the purpose of sending an email
+     */
+    public function sendResetConfirmationEmail($password)
+    {
+        $url = url(route('login'));
+        Mail::to($this)->queue(new ResetPasswordConfirmationEmail($url,$password));
     }
 
 

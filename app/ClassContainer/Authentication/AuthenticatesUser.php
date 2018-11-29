@@ -91,7 +91,7 @@ class AuthenticatesUser {
     {
         $user = User::byEmail($email);
 
-        ResetToken::generateFor($user)
+        ResetToken::createToken($user)
             ->sendResetEmail();
 
         return redirect()->route('login')->with('message', Lang::get('authentication.reset_password_message'));
@@ -104,25 +104,24 @@ class AuthenticatesUser {
      */
     public function createNewPasswordForm(ResetToken $token)
     {
+        abort_if(! $token->active(),403,Lang::get('authentication.reset_password_expired'));
+
         return view("authentication.login.changePasswordForm")->with('resetToken',$token->token);
+
     }
 
 
     /**
      * Attempts to change password for the user with email address
-     * @param $credentials
+     * @param $password
+     * @param $resetToken
      * @return RedirectResponse
-     * @throws \Exception
      */
     public function changePassword($password,$resetToken)
     {
-        $user=ResetToken::byToken($resetToken)->user;
-        $message = ($user->changePassword($password) ?
-            Lang::get('authentication.password_reset_successful') :
-            Lang::get('authentication.password_reset_failed'));
+        ResetToken::byToken($resetToken)->user->changePassword($password);
 
-        return redirect()->route('login')->with('message', $message);
-
+        return redirect()->route('login')->with('message',  Lang::get('authentication.password_reset_successful'));
     }
 
     /**

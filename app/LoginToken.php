@@ -3,7 +3,7 @@
 namespace App;
 
 use App\Jobs\RegistrationEmailJob;
-use App\Mail\RegistrationConfirmationEmail;
+use App\Mail\Authentication\RegistrationConfirmationEmail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
 

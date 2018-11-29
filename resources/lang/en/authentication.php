@@ -19,6 +19,7 @@ return [
     //******* ResetPassword ********
     'password_reset_successful' =>'Your password reset succeeded',
     'password_reset_failed' =>'Your password reset failed',
+    'reset_password_expired' =>'Ouch !!! Your reset request expired, please try again '. env('APP_NAME'). ' password reset',
 
     //Form
     'reset_password_header'=>'Reset password',
