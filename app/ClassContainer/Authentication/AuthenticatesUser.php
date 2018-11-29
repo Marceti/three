@@ -91,7 +91,7 @@ class AuthenticatesUser {
     {
         $user = User::byEmail($email);
 
-        $this->createResetToken($user)
+        ResetToken::generateFor($user)
             ->sendResetEmail();
 
         return redirect()->route('login')->with('message', Lang::get('authentication.reset_password_message'));
@@ -104,11 +104,7 @@ class AuthenticatesUser {
      */
     public function createNewPasswordForm(ResetToken $token)
     {
-        $user = $token->user;
-
-        abort_if(! $user,401,"This user is not authorized");
-
-        return view("authentication.login.changePasswordForm", compact('user'));
+        return view("authentication.login.changePasswordForm")->with('resetToken',$token->token);
     }
 
 
@@ -118,15 +114,14 @@ class AuthenticatesUser {
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function changePassword($credentials)
+    public function changePassword($password,$resetToken)
     {
-        $user = User::byEmail($credentials['email']);
+        $user=ResetToken::byToken($resetToken)->user;
+        $message = ($user->changePassword($password) ?
+            Lang::get('authentication.password_reset_successful') :
+            Lang::get('authentication.password_reset_failed'));
 
-        $user->changePassword($credentials);
-
-        $this->rememberUser($credentials);
-
-        return redirect()->route('login')->with('message', Lang::get('authentication.password_reset_successful'));
+        return redirect()->route('login')->with('message', $message);
 
     }
 
@@ -169,14 +164,7 @@ class AuthenticatesUser {
         return LoginToken::generateFor($user);
     }
 
-    /**
-     * @param $user
-     * @return mixed
-     */
-    private function createResetToken($user)
-    {
-        return ResetToken::generateFor($user);
-    }
+
 
     /**
      * If checkbox , remembers the user in current session

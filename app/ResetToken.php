@@ -51,7 +51,12 @@ class ResetToken extends Model {
         return $this->belongsTo('App\User');
     }
 
-    public static function createToken($user,$count)
+    /**
+     * @param $user
+     * @param $count
+     * @return mixed
+     */
+    public static function createToken($user, $count)
     {
         return static::create([
             'user_id' => $user->id,
@@ -60,6 +65,13 @@ class ResetToken extends Model {
         ]);
     }
 
-
+    /**
+     * @param $token
+     * @return mixed
+     */
+    public static function byToken($token)
+    {
+        return static::where('token',$token)->firstorfail();
+    }
 
 }

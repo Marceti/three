@@ -18,6 +18,8 @@ return [
 
     //******* ResetPassword ********
     'password_reset_successful' =>'Your password reset succeeded',
+    'password_reset_failed' =>'Your password reset failed',
+
     //Form
     'reset_password_header'=>'Reset password',
     'send_link_button'=>'Send',

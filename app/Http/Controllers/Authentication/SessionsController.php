@@ -49,33 +49,6 @@ class SessionsController extends Controller {
         return $auth->logOut();
     }
 
-
-    /**
-     * Generates the view for the new password
-     * @param AuthenticatesUser $auth
-     * @param ResetToken $token
-     * @return AuthenticatesUser
-     */
-    public function CreateNewPassword(AuthenticatesUser $auth, ResetToken $token)
-    {
-        return $auth->createNewPasswordForm($token);
-    }
-
-    /**
-     * @param AuthenticatesUser $auth
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Exception
-     */
-    public function StoreNewPassword(AuthenticatesUser $auth)
-    {
-        $credentials = request()->validate([
-            'email'=> 'required|email|exists:users,email',
-            'password'=>['required','confirmed','min:6',new MustHaveUppLowNum],
-        ]);
-
-        return $auth->changePassword($credentials+request(['remember_token','reset_token']));
-    }
-
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
@@ -96,5 +69,31 @@ class SessionsController extends Controller {
         ]);
 
         return $auth->resetPassword($email);
+    }
+
+
+    /**
+     * Generates the view for the new password
+     * @param AuthenticatesUser $auth
+     * @param ResetToken $token
+     * @return AuthenticatesUser
+     */
+    public function CreateNewPassword(AuthenticatesUser $auth, ResetToken $token)
+    {
+        return $auth->createNewPasswordForm($token);
+    }
+
+    /**
+     * @param AuthenticatesUser $auth
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Exception
+     */
+    public function StoreNewPassword(AuthenticatesUser $auth)
+    {
+        $password_field = request()->validate([
+            'password'=>['required','confirmed','min:6',new MustHaveUppLowNum],
+        ]);
+
+        return $auth->changePassword($password_field['password'],request('reset_token'));
     }
 }

@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password','remember_token'
+        'name', 'email', 'password'
     ];
 
     /**
@@ -87,16 +87,22 @@ class User extends Authenticatable
         return static::where('email',$email)->first();
     }
 
-    public function changePassword($credentials)
+    private function refreshRememberToken()
     {
-        if($this->remember_token==$credentials['remember_token'] && $this->resetToken->token==$credentials['reset_token']){
-            $this->resetToken->delete();
+        return tap($this,function(){
+            $this->remember_token = str_random(50);
+            $this->save();
+        });
+    }
 
-           return $this->update(['password'=>$credentials['password'],
-                           'remember_token'=>str_random(50)]);
-        }
-
-        return abort(401,"Unauthorized password change");
+    /**
+     * @param $password
+     * @return
+     */
+    public function changePassword($password)
+    {
+        $this->resetToken->delete();
+        return $this->refreshRememberToken()->update(['password'=>$password]);
     }
 
 

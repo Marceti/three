@@ -14,13 +14,7 @@
 
                 {{csrf_field()}}
 
-                <input type="hidden" name="remember_token" id="hiddenField" value={{$user->remember_token}} />
-                <input type="hidden" name="reset_token" id="hiddenField" value={{$user->resetToken->token}} />
-
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" class="form-control" name="email" placeholder="Your Email Here" required>
-                </div>
+                <input type="hidden" name="reset_token" id="hiddenField" value={{$resetToken}} />
 
                 <div class="form-group">
                     <label for="password">Password:</label>
@@ -30,12 +24,6 @@
                 <div class="form-group">
                     <label for="password_confirmation">Password confirmation:</label>
                     <input id="password_confirmation" type="password" class="form-control" name="password_confirmation" placeholder="Retype Password Here" required>
-                </div>
-
-                <div class="checkbox mb-3">
-                    <label>
-                        <input type="checkbox" name="remember-me"> {{ Lang::get('authentication.remember_me') }}
-                    </label>
                 </div>
 
                 <div class="form-group">
