@@ -62,8 +62,7 @@ class User extends Authenticatable
     public function firstAuthentication()
     {
         if (! $this->email_verified_at){
-            $this->email_verified_at=Carbon::now();
-            $this->save();
+            $this->update('email_verified_at',Carbon::now());
             return true;
         }
         return false;

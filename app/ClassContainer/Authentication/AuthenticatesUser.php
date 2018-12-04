@@ -50,6 +50,7 @@ class AuthenticatesUser {
      */
     public function authenticate(LoginToken $token)
     {
+        //TODO: Auth-Maybe: Se Poate pune un filtru de numar de incercari sau un landing page cu I'm not a robot
         $user = $token->user;
 
         $message = ($user->firstAuthentication() ?
@@ -67,8 +68,15 @@ class AuthenticatesUser {
      */
     public function login($credentials)
     {
-        $this->rememberUser($credentials);
-        return $this->loginAttempt($credentials);
+        if (Auth::attempt($credentials))
+        {
+            $this->rememberUser($credentials);
+            return redirect()->intended(request('home'));
+        }
+
+        //TODO : Auth-MUSAI : To many attempts
+
+        return redirect()->route('login')->withErrors(Lang::get('authentication.wrong_password'));
     }
 
     /**
@@ -163,33 +171,17 @@ class AuthenticatesUser {
         return LoginToken::generateFor($user);
     }
 
-
-
     /**
      * If checkbox , remembers the user in current session
      * @param $credentials
      */
     private function rememberUser($credentials)
     {
-        if (array_key_exists('remember-me',$credentials))
+        if (array_key_exists('remember-me',request()->input()))
         {
+            //TODO : Auth-Maybe De rezolvat : Remember Me - prin alta metoda
             SessionManager::rememberUser($credentials);
         }
-    }
-
-
-    /**
-     * Attempts to login the user if the extra-conditions pass and also user-password matches
-     * @param $credentials
-     * @return RedirectResponse
-     */
-    private function loginAttempt($credentials)
-    {
-        if (Auth::attempt($credentials))
-        {
-            return redirect()->intended(request('home'));
-        }
-        return redirect()->route('login')->withErrors(Lang::get('authentication.wrong_password'));
     }
 
 }

@@ -38,7 +38,7 @@ class LoginToken extends Model
      */
     public function sendRegistrationEmail()
     {
-        $url = url('register/token',$this->user->loginToken->token);
+        $url = url('register/token',$this->token);
         Mail::to($this->user)->queue(new RegistrationConfirmationEmail($url));
     }
 

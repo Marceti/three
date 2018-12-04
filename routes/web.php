@@ -13,14 +13,6 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
-//TODO : Password Reset Works PERFECT, Mai reverifica in mare astea :
-//TODO : 1.Procedura de Inregistrare (poate pui Nu sunt robot ),
-//TODO : 2.Procedura de Resend Confirmation Email,
-//TODO : 3.Procedura de Login
-
-//TODO : De rezolvat : Remember Me - nu merge
-//TODO : Fa verificarea de numar de incercari : TO MANY LOGIN ATTEMPTS
-//TODO : Fa verificarea de numar de incercari " TO MANY RESET ATTEMPTS
 
 /* ***  Authentication  *** */
 

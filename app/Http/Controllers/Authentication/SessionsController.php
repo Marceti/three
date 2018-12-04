@@ -36,6 +36,8 @@ class SessionsController extends Controller {
     {
         $credentials = request()->validate(['email'=>'required|email|exists:users,email',
                                             'password'=>'required']);
+        //TODO : Auth-MUSAI Procedura de Login (poate pui Nu sunt robot )
+
         return $auth->login($credentials);
     }
 

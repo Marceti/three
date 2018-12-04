@@ -59,6 +59,7 @@ class RegistrationController extends Controller {
      */
     public function resendTokenForm()
     {
+        //TODO: Auth-Maybe: Se Poate pune un filtru de numar de incercari sau un obiect cu I'm not a robot
         return view("authentication.registration.emailConfirmationForm");
     }
 
