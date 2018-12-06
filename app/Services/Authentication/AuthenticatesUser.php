@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Lang;
 use App\Services\SessionManager;
 
-
 class AuthenticatesUser implements PasswordAuthenticator {
 
 
@@ -69,13 +68,22 @@ class AuthenticatesUser implements PasswordAuthenticator {
      */
     public function login($credentials)
     {
+
+        //TODO Auth-MUSAI : Mai verifica asta cu cash-ul o data
+        $maxNoAttempts = 5;
+        $waitTimeMinutes = 2;
+
+        abort_if($this->toManyAttempts($credentials['email'], request()->ip(), $maxNoAttempts, $waitTimeMinutes), 429, "OUCH !!! To many attempts! , Try again in (" . $waitTimeMinutes . " min)");
+
+        $this->numberOfLoginAttempts($credentials['email'], request()->ip());
+
+
         if (Auth::attempt($credentials))
         {
             $this->rememberUser($credentials);
+
             return redirect()->intended(request('home'));
         }
-
-        //TODO : Auth-MUSAI : To many attempts
 
         return redirect()->route('login')->withErrors(Lang::get('authentication.wrong_password'));
     }
@@ -87,6 +95,7 @@ class AuthenticatesUser implements PasswordAuthenticator {
     public function logOut()
     {
         Auth::logout();
+
         return redirect()->route('home')->with('message', Lang::get('authentication.log_out'));
     }
 
@@ -113,9 +122,9 @@ class AuthenticatesUser implements PasswordAuthenticator {
      */
     public function createNewPasswordForm(ResetToken $token)
     {
-        abort_if(! $token->active(),403,Lang::get('authentication.reset_password_expired'));
+        abort_if(! $token->active(), 403, Lang::get('authentication.reset_password_expired'));
 
-        return view("authentication.login.changePasswordForm")->with('resetToken',$token->token);
+        return view("authentication.login.changePasswordForm")->with('resetToken', $token->token);
 
     }
 
@@ -126,12 +135,20 @@ class AuthenticatesUser implements PasswordAuthenticator {
      * @param $resetToken
      * @return RedirectResponse
      */
-    public function changePassword($password,$resetToken)
+    public function changePassword($password, $resetToken)
     {
         ResetToken::byToken($resetToken)->user->changePassword($password);
 
-        return redirect()->route('login')->with('message',  Lang::get('authentication.password_reset_successful'));
+        return redirect()->route('login')->with('message', Lang::get('authentication.password_reset_successful'));
     }
+
+
+
+
+    //*************************************************************************************************
+    //---------------------------------Local Methods----------------------------------------------------
+    //*************************************************************************************************
+
 
     /**
      * If user with email exists returns it, otherwise creates a user
@@ -139,14 +156,17 @@ class AuthenticatesUser implements PasswordAuthenticator {
      * @return mixed
      * @throws \Exception
      */
+
     private function resolveUser($credentials)
     {
-        $user= User::byEmail($credentials['email']);
+        $user = User::byEmail($credentials['email']);
 
-        if($user){
+        if ($user)
+        {
             return $user;
         }
-        else {
+        else
+        {
             return $this->createUser($credentials);
         }
     }
@@ -160,7 +180,8 @@ class AuthenticatesUser implements PasswordAuthenticator {
     private function createUser($credentials)
     {
         $this->rememberUser($credentials);
-        return User::create($credentials+['remember_token'=>str_random(50)]);
+
+        return User::create($credentials + ['remember_token' => str_random(50)]);
     }
 
     /**
@@ -178,10 +199,42 @@ class AuthenticatesUser implements PasswordAuthenticator {
      */
     private function rememberUser($credentials)
     {
-        if (array_key_exists('remember-me',request()->input()))
+        if (array_key_exists('remember-me', request()->input()))
         {
             //TODO : Auth-Maybe De rezolvat : Remember Me - prin alta metoda
             SessionManager::rememberUser($credentials);
+        }
+    }
+
+
+    private function toManyAttempts($email, $ip, $maxNoAttempts, $waitTimeMinutes)
+    {
+        $storeKey = 'email:' . strtolower($email) . ':ip:' . $ip . 'login:attempts';
+
+        if (cache()->has($storeKey))
+        {
+            cache()->increment($storeKey);
+        }
+        else
+        {
+            cache()->remember($storeKey, $waitTimeMinutes, function ()
+            {
+                return 1;
+            });
+        }
+
+        $result = (cache()->get($storeKey, 0) >= $maxNoAttempts) ? true : false;
+
+        return $result;
+    }
+
+    private function numberOfLoginAttempts($email, $ip)
+    {
+        //TODO Auth-MUSAI : ASTA TREBUIE SA DISPARA
+        $storeKey = 'email:' . strtolower($email) . ':ip:' . $ip . 'login:attempts';
+        if (cache()->has($storeKey))
+        {
+            SessionManager::flashMessage("incarcari " . cache()->get($storeKey));
         }
     }
 
