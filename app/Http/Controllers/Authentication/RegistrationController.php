@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Authentication;
 
 
+use App\Contracts\Authentication\PasswordAuthenticator;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegistrationRequest;
 use App\LoginToken;
 use App\Rules\MustHaveUppLowNum;
-use App\Services\Authentication\PasswordAuthenticator;
+
 
 
 class RegistrationController extends Controller {

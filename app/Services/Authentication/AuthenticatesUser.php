@@ -9,6 +9,7 @@
 namespace App\Services\Authentication;
 
 
+use App\Contracts\Authentication\PasswordAuthenticator;
 use App\LoginToken;
 use App\ResetToken;
 use App\User;

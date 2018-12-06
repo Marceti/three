@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use App\Contracts\Authentication\PasswordAuthenticator;
-use App\Services\Authentication\PasswordAuthenticator;
 
+use App\Services\Authentication\AuthenticatesUser;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

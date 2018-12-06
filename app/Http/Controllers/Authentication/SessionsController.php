@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Authentication;
 
+use App\Contracts\Authentication\PasswordAuthenticator;
 use App\Services\Authentication\AuthenticatesUser;
 use App\ResetToken;
 use App\Rules\MustHaveUppLowNum;
 use App\Http\Controllers\Controller;
-use App\Services\Authentication\PasswordAuthenticator;
 
 class SessionsController extends Controller {
 
