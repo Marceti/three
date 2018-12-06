@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Services\Authentication;
+namespace App\Contracts\Authentication;
 
 
 use App\LoginToken;

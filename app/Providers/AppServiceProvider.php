@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Services\Authentication\AuthenticatesUser;
+use App\Contracts\Authentication\PasswordAuthenticator;
 use App\Services\Authentication\PasswordAuthenticator;
 
 use Illuminate\Support\ServiceProvider;
