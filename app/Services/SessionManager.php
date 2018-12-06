@@ -6,7 +6,7 @@
  * Time: 13:59
  */
 
-namespace App\ClassContainer;
+namespace App\Services;
 
 
 class SessionManager {

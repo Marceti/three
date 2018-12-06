@@ -2,20 +2,24 @@
 
 namespace App\Http\Controllers\Authentication;
 
-use App\ClassContainer\Authentication\AuthenticatesUser;
-use App\Http\Requests\LoginRequest;
-use App\Http\Requests\ResetPasswordRequest;
+use App\Services\Authentication\AuthenticatesUser;
 use App\ResetToken;
 use App\Rules\MustHaveUppLowNum;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Services\Authentication\PasswordAuthenticator;
 
 class SessionsController extends Controller {
 
-    public function __construct()
+    /**
+     * @var PasswordAuthenticator
+     */
+    private $auth;
+
+    public function __construct(PasswordAuthenticator $auth)
     {
         $this->middleware('guest')-> except('destroy');
         $this->middleware('email_verified')->only("store");
+        $this->auth = $auth;
     }
 
     /**
@@ -28,27 +32,22 @@ class SessionsController extends Controller {
 
     /**
      * If all the conditions are true (see middleware), attempts to login the user
-     * @param AuthenticatesUser $auth
      * @return \Illuminate\Http\RedirectResponse
-     * @throws \Exception
      */
-    public function store(AuthenticatesUser $auth)
+    public function store()
     {
         $credentials = request()->validate(['email'=>'required|email|exists:users,email',
                                             'password'=>'required']);
-        //TODO : Auth-MUSAI Procedura de Login (poate pui Nu sunt robot )
-
-        return $auth->login($credentials);
+        return $this->auth->login($credentials);
     }
 
     /**
      * Loggs out the user
-     * @param AuthenticatesUser $auth
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(AuthenticatesUser $auth)
+    public function destroy()
     {
-        return $auth->logOut();
+        return $this->auth->logOut();
     }
 
     /**
@@ -60,42 +59,37 @@ class SessionsController extends Controller {
     }
 
     /**
-     * @param AuthenticatesUser $auth
      * @return $this|\Illuminate\Http\RedirectResponse
-     * @throws \Exception
      */
-    public function resetPassword(AuthenticatesUser $auth)
+    public function resetPassword()
     {
         $email=request()->validate([
             'email'=> 'required|email|exists:users,email',
         ]);
 
-        return $auth->resetPassword($email);
+        return $this->auth->resetPassword($email);
     }
 
 
     /**
      * Generates the view for the new password
-     * @param AuthenticatesUser $auth
      * @param ResetToken $token
      * @return AuthenticatesUser
      */
-    public function CreateNewPassword(AuthenticatesUser $auth, ResetToken $token)
+    public function CreateNewPassword(ResetToken $token)
     {
-        return $auth->createNewPasswordForm($token);
+        return $this->auth->createNewPasswordForm($token);
     }
 
     /**
-     * @param AuthenticatesUser $auth
      * @return \Illuminate\Http\RedirectResponse
-     * @throws \Exception
      */
-    public function StoreNewPassword(AuthenticatesUser $auth)
+    public function StoreNewPassword()
     {
         $password_field = request()->validate([
             'password'=>['required','confirmed','min:6',new MustHaveUppLowNum],
         ]);
 
-        return $auth->changePassword($password_field['password'],request('reset_token'));
+        return $this->auth->changePassword($password_field['password'],request('reset_token'));
     }
 }

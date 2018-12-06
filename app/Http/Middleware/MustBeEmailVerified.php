@@ -6,7 +6,7 @@ use App\User;
 use Closure;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Lang;
-use App\ClassContainer\RouterManager;
+use App\Services\RouterManager;
 
 class MustBeEmailVerified {
 

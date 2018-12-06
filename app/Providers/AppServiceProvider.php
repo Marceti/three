@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Services\Authentication\AuthenticatesUser;
+use App\Services\Authentication\PasswordAuthenticator;
+
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +26,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(PasswordAuthenticator::class, AuthenticatesUser::class);
     }
 }

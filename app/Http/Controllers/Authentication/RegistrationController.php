@@ -2,21 +2,30 @@
 
 namespace App\Http\Controllers\Authentication;
 
-use App\ClassContainer\Authentication\AuthenticatesUser;
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegistrationRequest;
 use App\LoginToken;
 use App\Rules\MustHaveUppLowNum;
-use Illuminate\Http\Request;
+use App\Services\Authentication\PasswordAuthenticator;
+
 
 class RegistrationController extends Controller {
 
     /**
-     * RegistrationController constructor.
+     * @var PasswordAuthenticator
      */
-    public function __construct()
+    private $auth;
+
+    /**
+     * RegistrationController constructor.
+     * @param PasswordAuthenticator $auth
+     */
+    public function __construct(PasswordAuthenticator $auth)
     {
         $this->middleware('guest');
+
+        $this->auth = $auth;
     }
 
     /**
@@ -29,29 +38,27 @@ class RegistrationController extends Controller {
 
     /**
      * Stores User, and sends Token - link Email
-     * @param AuthenticatesUser $auth
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \App\Services\Authentication\RedirectResponse
      * @throws \Exception
      */
-    public function store(AuthenticatesUser $auth)
+    public function store()
     {
         $credentials = request()->validate([
             'name' => 'required|alpha_num|min:3|unique:users,name',
             'email'=> 'required|email|unique:users,email',
             'password'=>['required','confirmed','min:6',new MustHaveUppLowNum],
         ]);
-        return $auth->invite($credentials);
+        return $this->auth->invite($credentials);
     }
 
     /**
      * Tries to validate user with the given token
-     * @param AuthenticatesUser $auth
      * @param LoginToken $token
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return \App\Services\Authentication\RedirectResponse|\Illuminate\Routing\Redirect
      */
-    public function authenticate(AuthenticatesUser $auth, LoginToken $token)
+    public function authenticate(LoginToken $token)
     {
-        return $auth->authenticate($token);
+        return $this->auth->authenticate($token);
     }
 
     /**
@@ -65,16 +72,15 @@ class RegistrationController extends Controller {
 
     /**
      * Resends the token to the user with the given email
-     * @param AuthenticatesUser $auth
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \App\Services\Authentication\RedirectResponse
      * @throws \Exception
      */
-    public function resendToken(AuthenticatesUser $auth)
+    public function resendToken()
     {
         $existingEmail=request()->validate([
             'email'=> 'required|email|exists:users,email',
         ]);
-        return $auth->invite($existingEmail);
+        return $this->auth->invite($existingEmail);
     }
 
 

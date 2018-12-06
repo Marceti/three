@@ -6,7 +6,7 @@
  * Time: 14:42
  */
 
-namespace App\ClassContainer\Authentication;
+namespace App\Services\Authentication;
 
 
 use App\LoginToken;
@@ -15,10 +15,10 @@ use App\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Lang;
-use App\ClassContainer\SessionManager;
-use PHPUnit\Framework\Exception;
+use App\Services\SessionManager;
 
-class AuthenticatesUser {
+
+class AuthenticatesUser implements PasswordAuthenticator {
 
 
     /**
