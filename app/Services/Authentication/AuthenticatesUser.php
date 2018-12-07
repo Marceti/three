@@ -63,22 +63,14 @@ class AuthenticatesUser implements PasswordAuthenticator {
 
     /**
      * Attempts to Log in the user
+     * @param $credentials
      * @return RedirectResponse
      * @throws \Exception
      */
     public function login($credentials)
     {
 
-        //TODO Auth-MUSAI : Mai verifica asta cu cash-ul o data
-        $maxNoAttempts = 5;
-        $waitTimeMinutes = 2;
-
-        abort_if($this->toManyAttempts($credentials['email'], request()->ip(), $maxNoAttempts, $waitTimeMinutes), 429, "OUCH !!! To many attempts! , Try again in (" . $waitTimeMinutes . " min)");
-
-        $this->numberOfLoginAttempts($credentials['email'], request()->ip());
-
-
-        if (Auth::attempt($credentials))
+        if (! $this->toManyAttempts($credentials['email'],request()->ip(),5,2) && Auth::attempt($credentials))
         {
             $this->rememberUser($credentials);
 
@@ -206,36 +198,27 @@ class AuthenticatesUser implements PasswordAuthenticator {
         }
     }
 
-
+    /**
+     * Increments the number of attempts and
+     *      if this value exceeds the maximum allowed attempts returns ABORT(429) otherwise FALSE
+     * @param $email
+     * @param $ip
+     * @param $maxNoAttempts
+     * @param $waitTimeMinutes
+     * @return bool
+     * @throws \Exception
+     */
     private function toManyAttempts($email, $ip, $maxNoAttempts, $waitTimeMinutes)
     {
-        $storeKey = 'email:' . strtolower($email) . ':ip:' . $ip . 'login:attempts';
+        $storeKey = 'email:' . strtolower($email) . ':ip:' . $ip . ':login:attempts';
 
-        if (cache()->has($storeKey))
-        {
+        if(! cache()->add($storeKey,1,$waitTimeMinutes)){
             cache()->increment($storeKey);
         }
-        else
-        {
-            cache()->remember($storeKey, $waitTimeMinutes, function ()
-            {
-                return 1;
-            });
-        }
 
-        $result = (cache()->get($storeKey, 0) >= $maxNoAttempts) ? true : false;
-
-        return $result;
-    }
-
-    private function numberOfLoginAttempts($email, $ip)
-    {
-        //TODO Auth-MUSAI : ASTA TREBUIE SA DISPARA
-        $storeKey = 'email:' . strtolower($email) . ':ip:' . $ip . 'login:attempts';
-        if (cache()->has($storeKey))
-        {
-            SessionManager::flashMessage("incarcari " . cache()->get($storeKey));
-        }
+        abort_if(cache()->get($storeKey, 0) >= $maxNoAttempts,
+            429, "OUCH !!! To many attempts! , Try again in (" . $waitTimeMinutes . " min)");
+        return false;
     }
 
 }
