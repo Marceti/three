@@ -20,7 +20,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password'
+        'name', 'email', 'password','email_verified_at',
     ];
 
     /**
@@ -62,7 +62,7 @@ class User extends Authenticatable
     public function firstAuthentication()
     {
         if (! $this->email_verified_at){
-            $this->update('email_verified_at',Carbon::now());
+            $this->update(['email_verified_at'=>Carbon::now()]);
             return true;
         }
         return false;
