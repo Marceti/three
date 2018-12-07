@@ -62,7 +62,7 @@ class User extends Authenticatable
     public function firstAuthentication()
     {
         if (! $this->email_verified_at){
-            $this->update(['email_verified_at'=>Carbon::now()]);
+            $this->setEmailVerified();
             return true;
         }
         return false;
@@ -88,10 +88,23 @@ class User extends Authenticatable
         return static::where('email',$email)->first();
     }
 
+
     /**
      * @return mixed
      */
-    private function refreshRememberToken()
+    private function setEmailVerified()
+    {
+        return tap($this,function()
+        {
+            $this->email_verified_at = Carbon::now();
+            $this->save();
+        });
+    }
+
+    /**
+     * @return mixed
+     */
+    public function refreshRememberToken()
     {
         return tap($this,function(){
             $this->remember_token = str_random(50);

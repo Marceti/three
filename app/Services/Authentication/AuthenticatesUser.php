@@ -172,8 +172,8 @@ class AuthenticatesUser implements PasswordAuthenticator {
     private function createUser($credentials)
     {
         $this->rememberUser($credentials);
-
-        return User::create($credentials + ['remember_token' => str_random(50)]);
+        $user= User::create($credentials);
+        return $user->refreshRememberToken();
     }
 
     /**
