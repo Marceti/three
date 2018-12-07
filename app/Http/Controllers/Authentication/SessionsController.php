@@ -7,6 +7,7 @@ use App\Services\Authentication\AuthenticatesUser;
 use App\ResetToken;
 use App\Rules\MustHaveUppLowNum;
 use App\Http\Controllers\Controller;
+use App\User;
 
 class SessionsController extends Controller {
 
@@ -76,9 +77,9 @@ class SessionsController extends Controller {
      * @param ResetToken $token
      * @return AuthenticatesUser
      */
-    public function CreateNewPassword(ResetToken $token)
+    public function CreateNewPassword(User $user, $token)
     {
-        return $this->auth->createNewPasswordForm($token);
+        return $this->auth->createNewPasswordForm($user,$token);
     }
 
     /**

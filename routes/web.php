@@ -35,7 +35,7 @@ Route::get("/login/resetPassword", '\App\Http\Controllers\Authentication\Session
 Route::post("/login/resetPassword", '\App\Http\Controllers\Authentication\SessionsController@resetPassword');
 
 //TODO Fa ruta asta cu nume , si mailul sa trimita URL compus din route()->name
-Route::get("/resetPassword/token/{token}", '\App\Http\Controllers\Authentication\SessionsController@CreateNewPassword');
+Route::get("/{user}/resetPassword/{token}", '\App\Http\Controllers\Authentication\SessionsController@CreateNewPassword');
 Route::post("/resetPassword/token", '\App\Http\Controllers\Authentication\SessionsController@StoreNewPassword')->name('change_password');
 /* ***  Regular  *** */
 

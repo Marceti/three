@@ -33,14 +33,16 @@ interface PasswordAuthenticator {
 
     /**
      * grabs the user with given email, for user creates new resetToken, sends the link on users email
+     * @param $email
      */
     public function resetPassword($email);
 
     /**
      * For the returned token, grabs the user for this token and generates the view with to user remember_token
+     * @param $user
      * @param ResetToken $token
      */
-    public function createNewPasswordForm(ResetToken $token);
+    public function createNewPasswordForm($user, $token);
 
 
     /**

@@ -92,6 +92,7 @@ class AuthenticatesUser implements PasswordAuthenticator {
     }
 
 
+
     /**
      * grabs the user with given email, for user creates new resetToken, sends the link on users email
      * @return $this|RedirectResponse
@@ -101,7 +102,7 @@ class AuthenticatesUser implements PasswordAuthenticator {
     {
         $user = User::byEmail($email);
 
-        ResetToken::createToken($user)
+        $user->createResetToken($user)
             ->sendResetEmail();
 
         return redirect()->route('login')->with('message', Lang::get('authentication.reset_password_message'));
@@ -109,14 +110,15 @@ class AuthenticatesUser implements PasswordAuthenticator {
 
     /**
      * For the returned token, grabs the user for this token and generates the view with to user remember_token
+     * @param $user
      * @param ResetToken $token
      * @return $this
      */
-    public function createNewPasswordForm(ResetToken $token)
+    public function createNewPasswordForm($user, $token)
     {
-        abort_if(! $token->active(), 403, Lang::get('authentication.reset_password_expired'));
+        abort_if(! $user->activeResetToken($token), 403, Lang::get('authentication.reset_password_expired'));
 
-        return view("authentication.login.changePasswordForm")->with('resetToken', $token->token);
+        return view("authentication.login.changePasswordForm")->with('resetToken', $token);
 
     }
 
@@ -126,10 +128,15 @@ class AuthenticatesUser implements PasswordAuthenticator {
      * @param $password
      * @param $resetToken
      * @return RedirectResponse
+     * @throws \Exception
      */
     public function changePassword($password, $resetToken)
     {
-        ResetToken::byToken($resetToken)->user->changePassword($password);
+        $user=User::byResetToken($resetToken);
+
+        abort_if(! $user,400,"This operation is not valid");
+
+        $user->changePassword($password);
 
         return redirect()->route('login')->with('message', Lang::get('authentication.password_reset_successful'));
     }
@@ -162,7 +169,6 @@ class AuthenticatesUser implements PasswordAuthenticator {
             return $this->createUser($credentials);
         }
     }
-
 
     /**
      * Saves the credentials if remember-me is on , and creates unconfirmed user
@@ -220,6 +226,10 @@ class AuthenticatesUser implements PasswordAuthenticator {
             429, "OUCH !!! To many attempts! , Try again in (" . $waitTimeMinutes . " min)");
         return false;
     }
+
+
+
+
 
 }
 

@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Mail\Authentication\resetPasswordConfirmationEmail;
+use App\Mail\Authentication\ResetPasswordEmail;
 use Carbon\Carbon;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -121,7 +122,6 @@ class User extends Authenticatable
         return tap($this)->update(['password'=>$password])
             ->refreshRememberToken()
             ->sendResetConfirmationEmail($password);
-
     }
 
     /**
@@ -131,6 +131,108 @@ class User extends Authenticatable
     {
         $url = url(route('login'));
         Mail::to($this)->queue(new ResetPasswordConfirmationEmail($url,$password));
+        return true;
+    }
+
+
+    /**
+     * Creates Reset token ,
+     *      Writes to Cache : user:ID:reset:token => [reset_token, remember_token]
+     *      Writes to Cache : reset:token:TOKEN:user => userID
+     * @return mixed
+     * @throws \Exception
+     */
+    public function createResetToken()
+    {
+        $duration=1440;  //minutes
+
+        $userTokenKey = 'user:'. $this->id.':reset:token';
+
+        $resetToken = str_random(50);
+
+        $tokenKeyUser = 'reset:token:'.$resetToken.':user';
+
+        cache()->put($userTokenKey,[
+            'reset_token'=>$resetToken,
+            'remember_token'=>$this->remember_token,
+            ],$duration);
+
+        cache()->put($tokenKeyUser,$this->id,$duration);
+
+        return $this;
+
+    }
+
+    /**
+     *Sends an email with token-link
+     */
+    public function sendResetEmail()
+    {
+        $resetToken=$this->extractResetTokenFromCache();
+
+        $url = url('/'.$this->id.'/resetPassword',$resetToken);
+        Mail::to($this)->queue(new ResetPasswordEmail($url));
+    }
+
+    /**
+ * extracts reset_token from cache, for this user
+ * @return mixed
+ * @throws \Exception
+ */
+    private function extractResetTokenFromCache()
+    {
+        $userStoreKey = 'user:'. $this->id.':reset:token';
+
+        $token=cache()->get($userStoreKey)['reset_token'];
+
+        return $token;
+    }
+
+    /**
+     * extracts remember_token from cache, for this user
+     * @return mixed
+     * @throws \Exception
+     */
+    private function extractRememberMeTokenFromCache()
+    {
+        $userStoreKey = 'user:'. $this->id.':reset:token';
+
+        $token=cache()->get($userStoreKey)['remember_token'];
+
+        return $token;
+    }
+
+
+    /**
+     * Checks: if the saved in cache (reset_token) = this token
+     *                  AND
+     *         if the saved in cache (remember_token) is still the same as the users rememberToken
+     * @param $token
+     * @return bool
+     * @throws \Exception
+     */
+    public function activeResetToken($token)
+    {
+        $resetToken=$this->extractResetTokenFromCache();
+        $rememberToken=$this->extractRememberMeTokenFromCache();
+
+
+        //TODO Auth-MUSAI - Mai verifica O data reset passwords, ca acum este in cache
+       // dd(["resetTokenC"=>$resetToken,"resetTokenG"=>$token,"rememberTokenC"=>$rememberToken,"rememberTokenG"=>$this->remember_token]);
+        return ($this->remember_token==$rememberToken && $token==$resetToken);
+    }
+
+    /**
+     * extracts user by resetToken
+     * @param $token
+     * @return mixed
+     * @throws \Exception
+     */
+    public static function byResetToken($token)
+    {
+        $tokenKeyUser = 'reset:token:'.$token.':user';
+        $userIdFromCash = cache()->get($tokenKeyUser,null);
+        return ($userIdFromCash ? static::where('id',$userIdFromCash)->first() : null);
     }
 
 
