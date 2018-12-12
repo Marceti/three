@@ -14,7 +14,6 @@ class SessionManager {
     public static function addKey($key, $message)
     {
         session([$key => $message]);
-
     }
 
     public static function rememberUser($credentials)

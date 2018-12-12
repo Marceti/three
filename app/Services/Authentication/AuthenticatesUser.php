@@ -70,7 +70,9 @@ class AuthenticatesUser implements PasswordAuthenticator {
     public function login($credentials)
     {
 
-        if (! $this->toManyAttempts($credentials['email'],request()->ip(),5,2) && Auth::attempt($credentials))
+        if (! $this->toManyAttemptsOnUser($credentials['email'],request()->ip(),5,2) &&
+            ! $this->toManyAttemptsOnIp(request()->ip(),8,2) &&
+            Auth::attempt($credentials))
         {
             $this->rememberUser($credentials);
 
@@ -205,7 +207,7 @@ class AuthenticatesUser implements PasswordAuthenticator {
     }
 
     /**
-     * Increments the number of attempts and
+     * Increments the number of attempts for specific EMAIL and IP and
      *      if this value exceeds the maximum allowed attempts returns ABORT(429) otherwise FALSE
      * @param $email
      * @param $ip
@@ -214,9 +216,31 @@ class AuthenticatesUser implements PasswordAuthenticator {
      * @return bool
      * @throws \Exception
      */
-    private function toManyAttempts($email, $ip, $maxNoAttempts, $waitTimeMinutes)
+    private function toManyAttemptsOnUser($email, $ip, $maxNoAttempts, $waitTimeMinutes)
     {
-        $storeKey = 'email:' . strtolower($email) . ':ip:' . $ip . ':login:attempts';
+        $storeKey = 'login:attempts:email:' . strtolower($email) . ':ip:' . $ip;
+
+        if(! cache()->add($storeKey,1,$waitTimeMinutes)){
+            cache()->increment($storeKey);
+        }
+
+        abort_if(cache()->get($storeKey, 0) >= $maxNoAttempts,
+            429, "OUCH !!! To many attempts! , Try again in (" . $waitTimeMinutes . " min)");
+        return false;
+    }
+
+    /**
+     * Increments the number of attempts for specific IP and
+     *      if this value exceeds the maximum allowed attempts returns ABORT(429) otherwise FALSE
+     * @param $ip
+     * @param $maxNoAttempts
+     * @param $waitTimeMinutes
+     * @return bool
+     * @throws \Exception
+     */
+    private function toManyAttemptsOnIp($ip, $maxNoAttempts, $waitTimeMinutes)
+    {
+        $storeKey = 'login:attempts:ip:' . $ip;
 
         if(! cache()->add($storeKey,1,$waitTimeMinutes)){
             cache()->increment($storeKey);
