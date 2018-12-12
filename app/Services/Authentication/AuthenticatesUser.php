@@ -33,7 +33,7 @@ class AuthenticatesUser implements PasswordAuthenticator {
 
         if ($user)
         {
-            $this->createLoginToken($user)
+            $user->generateLoginToken()
                 ->sendRegistrationEmail();
 
             return redirect()->route('login')->with('message', Lang::get('authentication.please_confirm'));
@@ -45,17 +45,22 @@ class AuthenticatesUser implements PasswordAuthenticator {
 
     /**
      * Authenticates user with the given Login token
-     * @param LoginToken $token
      * @return RedirectResponse|\Illuminate\Routing\Redirect
+     * @throws \Exception
      */
-    public function authenticate(LoginToken $token)
+    public function authenticate($token)
     {
         //TODO: Auth-Maybe: Se Poate pune un filtru de numar de incercari sau un landing page cu I'm not a robot
-        $user = $token->user;
+        $user = User::byToken($token, 'login');
 
-        $message = ($user->firstAuthentication() ?
-            Lang::get('authentication.confirmation', ['name' => $user->name]) :
-            Lang::get('authentication.already_confirmed', ['name' => $user->name]));
+        $message = Lang::get('authentication.missing_login_token') ;
+
+       if($user) {
+           $message = ($user->firstAuthentication() ?
+               Lang::get('authentication.confirmation') :
+               Lang::get('authentication.already_confirmed'));
+       }
+
 
         return redirect()->route('login')->with('message', $message);
 
@@ -70,8 +75,8 @@ class AuthenticatesUser implements PasswordAuthenticator {
     public function login($credentials)
     {
 
-        if (! $this->toManyAttemptsOnUser($credentials['email'],request()->ip(),5,2) &&
-            ! $this->toManyAttemptsOnIp(request()->ip(),8,2) &&
+        if ( ! $this->toManyAttemptsOnUser($credentials['email'], request()->ip(), 5, 2) &&
+            ! $this->toManyAttemptsOnIp(request()->ip(), 8, 2) &&
             Auth::attempt($credentials))
         {
             $this->rememberUser($credentials);
@@ -92,7 +97,6 @@ class AuthenticatesUser implements PasswordAuthenticator {
 
         return redirect()->route('home')->with('message', Lang::get('authentication.log_out'));
     }
-
 
 
     /**
@@ -134,9 +138,9 @@ class AuthenticatesUser implements PasswordAuthenticator {
      */
     public function changePassword($password, $resetToken)
     {
-        $user=User::byResetToken($resetToken);
+        $user = User::byToken($resetToken, 'reset');
 
-        abort_if(! $user,400,"This operation is not valid");
+        abort_if(! $user, 400, "This operation is not valid");
 
         $user->changePassword($password);
 
@@ -180,18 +184,11 @@ class AuthenticatesUser implements PasswordAuthenticator {
     private function createUser($credentials)
     {
         $this->rememberUser($credentials);
-        $user= User::create($credentials);
+        $user = User::create($credentials);
+
         return $user->refreshRememberToken();
     }
 
-    /**
-     * @param $user
-     * @return mixed
-     */
-    private function createLoginToken($user)
-    {
-        return LoginToken::generateFor($user);
-    }
 
     /**
      * If checkbox , remembers the user in current session
@@ -201,7 +198,7 @@ class AuthenticatesUser implements PasswordAuthenticator {
     {
         if (array_key_exists('remember-me', request()->input()))
         {
-            //TODO : Auth-Maybe De rezolvat : Remember Me - prin alta metoda
+            //TODO : Auth-MUSAI De rezolvat : Remember Me - prin alta metoda
             SessionManager::rememberUser($credentials);
         }
     }
@@ -220,12 +217,14 @@ class AuthenticatesUser implements PasswordAuthenticator {
     {
         $storeKey = 'login:attempts:email:' . strtolower($email) . ':ip:' . $ip;
 
-        if(! cache()->add($storeKey,1,$waitTimeMinutes)){
+        if ( ! cache()->add($storeKey, 1, $waitTimeMinutes))
+        {
             cache()->increment($storeKey);
         }
 
         abort_if(cache()->get($storeKey, 0) >= $maxNoAttempts,
             429, "OUCH !!! To many attempts! , Try again in (" . $waitTimeMinutes . " min)");
+
         return false;
     }
 
@@ -242,17 +241,16 @@ class AuthenticatesUser implements PasswordAuthenticator {
     {
         $storeKey = 'login:attempts:ip:' . $ip;
 
-        if(! cache()->add($storeKey,1,$waitTimeMinutes)){
+        if ( ! cache()->add($storeKey, 1, $waitTimeMinutes))
+        {
             cache()->increment($storeKey);
         }
 
         abort_if(cache()->get($storeKey, 0) >= $maxNoAttempts,
             429, "OUCH !!! To many attempts! , Try again in (" . $waitTimeMinutes . " min)");
+
         return false;
     }
-
-
-
 
 
 }

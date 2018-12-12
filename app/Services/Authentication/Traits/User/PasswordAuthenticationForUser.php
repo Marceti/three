@@ -8,6 +8,7 @@
 
 namespace App\Services\Authentication\Traits\User;
 
+use App\Mail\Authentication\RegistrationConfirmationEmail;
 use App\Mail\Authentication\resetPasswordConfirmationEmail;
 use App\Mail\Authentication\ResetPasswordEmail;
 use Carbon\Carbon;
@@ -26,8 +27,44 @@ trait PasswordAuthenticationForUser {
         return static::where('email',$email)->first();
     }
 
+    /**
+     * Registration
+     * Creates a new token for this user and saves it to cache for a specific duration, default = 1week
+     * @return mixed
+     * @throws \Exception
+     */
+    public function generateLoginToken($duration = 10080)
+    {
+        $loginToken = str_random(50);
+
+        //user:{ID}:login:token => {TOKEN}
+        $userLoginTokenKey = 'user:'. $this->id.':login:token';
+        cache()->put($userLoginTokenKey,$loginToken,$duration);
+
+        //login:token:{TOKEN} => {ID}
+        $tokenKeyUser = 'login:token:'.$loginToken.':user';
+        cache()->put($tokenKeyUser,$this->id,$duration);
+
+        return $this;
+    }
 
     /**
+     * Registration
+     * Triggers a Job with the purpose of sending an email
+     */
+    public function sendRegistrationEmail()
+    {
+        $loginToken=$this->extractTokenFromCache('login');
+
+        $url = url('register/token',$loginToken);
+        Mail::to($this)->queue(new RegistrationConfirmationEmail($url));
+    }
+
+
+
+
+    /**
+     * Registration - Authenticate
      * If user was already authenticated returns FALSE, otherwise will authenticate and return TRUE
      * @return bool
      */
@@ -86,7 +123,7 @@ trait PasswordAuthenticationForUser {
     }
 
     /**
-     *Triggers a Job with the purpose of sending an email
+     * Sends the confirmation Email to this user
      */
     public function sendResetConfirmationEmail($password)
     {
@@ -125,25 +162,27 @@ trait PasswordAuthenticationForUser {
     }
 
     /**
-     *Sends an email with token-link
+     * Session-resetPassword
+     * Sends an email with token-link
      */
     public function sendResetEmail()
     {
-        $resetToken=$this->extractTokenFromCache()['reset_token'];
+        $resetToken=$this->extractTokenFromCache('reset')['reset_token'];
 
         $url = url('/'.$this->id.'/resetPassword',$resetToken);
         Mail::to($this)->queue(new ResetPasswordEmail($url));
     }
 
     /**
+     * Session-resetPassword
      * extracts token from cache, for this user
-     * reset_token or remember_token
+     * Token Types : [reset , login]
      * @return mixed
      * @throws \Exception
      */
-    private function extractTokenFromCache()
+    private function extractTokenFromCache($tokenType)
     {
-        $userStoreKey = 'user:'. $this->id.':reset:token';
+        $userStoreKey = 'user:'. $this->id.':'.$tokenType.':token';
 
         return cache()->get($userStoreKey);
     }
@@ -151,6 +190,7 @@ trait PasswordAuthenticationForUser {
 
 
     /**
+     * Session-resetPassword
      * Checks: if the saved in cache (reset_token) = this token
      *                  AND
      *         if the saved in cache (remember_token) is still the same as the users rememberToken
@@ -160,21 +200,25 @@ trait PasswordAuthenticationForUser {
      */
     public function activeResetToken($token)
     {
-        $resetToken=$this->extractTokenFromCache()['reset_token'];
-        $rememberToken=$this->extractTokenFromCache()['remember_token'];
+        $resetTokens=extractTokenFromCache('reset');
+
+        $resetToken=$this->$resetTokens['reset_token'];
+        $rememberToken=$this->$resetTokens['remember_token'];
 
         return ($this->remember_token==$rememberToken && $token==$resetToken);
     }
 
     /**
-     * extracts user by resetToken
+     * Session-resetPassword
+     * extracts user by Token
+     * Token Types : [reset , login]
      * @param $token
      * @return mixed
      * @throws \Exception
      */
-    public static function byResetToken($token)
+    public static function byToken($token,$tokenType)
     {
-        $tokenKeyUser = 'reset:token:'.$token.':user';
+        $tokenKeyUser = $tokenType.':token:'.$token.':user';
         $userIdFromCash = cache()->get($tokenKeyUser,null);
         return ($userIdFromCash ? static::where('id',$userIdFromCash)->first() : null);
     }

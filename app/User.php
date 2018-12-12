@@ -41,17 +41,6 @@ class User extends Authenticatable
         $this->attributes['password'] = bcrypt($value);
     }
 
-    /**
-     * One to One realtionship
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function loginToken()
-    {
-        return $this->hasOne('App\LoginToken');
-    }
-
-
-
 
 
 

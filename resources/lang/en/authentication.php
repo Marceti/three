@@ -46,7 +46,8 @@ return [
 
     //******* messages ********
     'already_confirmed'  => 'This user is active',
-    'confirmation'       => 'Thank you for your registration :name. Enjoy',
+    'confirmation'       => 'Thank you for your registration. Enjoy',
+    'missing_login_token'=> 'The invitation for this user expired, please ask for a new invitation email',
     'please_confirm'     => 'Thank you ! Now please confirm your email address by accessing the link',
     'credentials_check'  => 'User not found. Please check your credentials',
     'email_confirmation' => 'Please confirm your email address , click on the link that was sent to your email address !',

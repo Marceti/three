@@ -57,7 +57,7 @@ class RegistrationController extends Controller {
      * @param LoginToken $token
      * @return \App\Services\Authentication\RedirectResponse|\Illuminate\Routing\Redirect
      */
-    public function authenticate(LoginToken $token)
+    public function authenticate($token)
     {
         return $this->auth->authenticate($token);
     }

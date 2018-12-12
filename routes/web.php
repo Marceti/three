@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Cookie;
 
 Route::get("/register", '\App\Http\Controllers\Authentication\RegistrationController@create')->name('register');
 Route::post("/register", '\App\Http\Controllers\Authentication\RegistrationController@store');
-
+//TODO : Auth-MUSAI De verificat login-Token prin cache
 Route::get("/register/token/{token}", '\App\Http\Controllers\Authentication\RegistrationController@authenticate');
 
 
