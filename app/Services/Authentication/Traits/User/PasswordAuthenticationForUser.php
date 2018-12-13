@@ -19,13 +19,14 @@ trait PasswordAuthenticationForUser {
     /**
      * extracts user by email
      * @param $email
+     * @param bool $nullable
      * @return mixed
-     * @throws \Exception
      */
-    public static function byEmail($email)
+    public static function byEmail($email,$nullable=false)
     {
-        return static::where('email',$email)->first();
+        return ($nullable ? static::where('email',$email)->first() : static::where('email',$email)->firstorfail());
     }
+
 
     /**
      * Registration

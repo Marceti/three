@@ -49,6 +49,7 @@ class RegistrationController extends Controller {
             'email'=> 'required|email|unique:users,email',
             'password'=>['required','confirmed','min:6',new MustHaveUppLowNum],
         ]);
+
         return $this->auth->invite($credentials);
     }
 

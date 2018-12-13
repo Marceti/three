@@ -10,13 +10,11 @@ namespace App\Services\Authentication;
 
 
 use App\Contracts\Authentication\PasswordAuthenticator;
-use App\LoginToken;
-use App\ResetToken;
 use App\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Lang;
-use App\Services\SessionManager;
+
 
 class AuthenticatesUser implements PasswordAuthenticator {
 
@@ -29,7 +27,7 @@ class AuthenticatesUser implements PasswordAuthenticator {
      */
     public function invite($credentials)
     {
-        $user = $this->resolveUser($credentials);
+        $user = $this->solveUser($credentials);
 
         if ($user)
         {
@@ -60,7 +58,6 @@ class AuthenticatesUser implements PasswordAuthenticator {
                Lang::get('authentication.confirmation') :
                Lang::get('authentication.already_confirmed'));
        }
-
 
         return redirect()->route('login')->with('message', $message);
 
@@ -155,6 +152,7 @@ class AuthenticatesUser implements PasswordAuthenticator {
     //*************************************************************************************************
 
 
+
     /**
      * If user with email exists returns it, otherwise creates a user
      * @param $credentials
@@ -162,9 +160,9 @@ class AuthenticatesUser implements PasswordAuthenticator {
      * @throws \Exception
      */
 
-    private function resolveUser($credentials)
+    private function solveUser($credentials)
     {
-        $user = User::byEmail($credentials['email']);
+        $user = User::byEmail($credentials['email'],true);
 
         if ($user)
         {
@@ -196,10 +194,13 @@ class AuthenticatesUser implements PasswordAuthenticator {
      */
     private function rememberUser($credentials)
     {
+        //TODO: Auth-Maybe : Se poate face asa ca sa tina minte pentru o sesiune mai multi useri in baza mailului
         if (array_key_exists('remember-me', request()->input()))
         {
-            //TODO : Auth-MUSAI De rezolvat : Remember Me - prin alta metoda
-            SessionManager::rememberUser($credentials);
+            session([
+                "user_email"=> $credentials['email'],
+                "user_password"=> $credentials['password']
+            ]);
         }
     }
 
