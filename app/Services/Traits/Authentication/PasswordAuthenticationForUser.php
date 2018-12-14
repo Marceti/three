@@ -6,7 +6,7 @@
  * Time: 14:56
  */
 
-namespace App\Services\Authentication\Traits\User;
+namespace App\Services\Traits\Authentication;
 
 use App\Mail\Authentication\RegistrationConfirmationEmail;
 use App\Mail\Authentication\resetPasswordConfirmationEmail;

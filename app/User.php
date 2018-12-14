@@ -3,9 +3,7 @@
 namespace App;
 
 
-
-use App\Services\Authentication\Traits\User\PasswordAuthenticationForUser;
-
+use App\Services\Traits\Authentication\PasswordAuthenticationForUser;
 use Illuminate\Notifications\Notifiable;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
