@@ -17,5 +17,7 @@
 
 @include('layouts.partials._errors')
 @include('layouts.partials._sessionMessages')
+
+<script src="{{asset('js/app.js')}}"></script>
 </body>
 </html>
