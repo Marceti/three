@@ -2,7 +2,7 @@
     <a class="navbar-brand" href="#">Navbar</a>
     <ul class="nav">
         <li class="nav-item">
-            <a class="nav-link active" href="/telescope">Telescope</a>
+            <a class="nav-link active" href={{url("telescope")}}>Telescope</a>
         </li>
         <li class="nav-item">
             <a class="nav-link active" href={{route('admin')}}>Admin Panel</a>

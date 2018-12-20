@@ -40,7 +40,6 @@ Route::post("/resetPassword/token", '\App\Http\Controllers\Authentication\Sessio
 
 Route::get("/", '\App\Http\Controllers\HomeController@index')->name('home');
 
-//TODO Fa Pagina master AdminLTE (minutul 12:30)
 Route::get("/adminLTE", function (){
-    return view('adminLTE.master_admin');
+    return view('adminLTE.admin');
 })->name('admin');
